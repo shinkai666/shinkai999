@@ -14,6 +14,7 @@ export default function TeamLeadsDashboard() {
   }, []);
 
   if (loading) return <div className="p-4">Loading dashboard...</div>;
+  if (!Array.isArray(chatters)) return <p>Failed to load data</p>;
 
   return (
     <div className="p-6 max-w-5xl mx-auto">
