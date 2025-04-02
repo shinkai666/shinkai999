@@ -1,29 +1,47 @@
-import { Client } from '@notionhq/client';
+import { useEffect, useState } from 'react';
 
-export default async function handler(req, res) {
-  const notion = new Client({ auth: process.env.NOTION_TOKEN });
-  const databaseId = process.env.NOTION_DATABASE_ID;
+export default function TeamLeadsDashboard() {
+  const [chatters, setChatters] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  try {
-    const response = await notion.databases.query({
-      database_id: databaseId,
-    });
+  useEffect(() => {
+    fetch('/api/get-all-chatters')
+      .then((res) => res.json())
+      .then((data) => {
+        setChatters(data);
+        setLoading(false);
+      });
+  }, []);
 
-    const data = response.results.map((page) => {
-      const props = page.properties;
-      return {
-        name: props['Full name']?.title?.[0]?.text?.content || '—',
-        email: props['Email']?.email || '—',
-        creator: props['Assigned Creator']?.select?.name || '—',
-        completedModules: [1, 2, 3, 4, 5, 6].filter(n => props[`Module ${n}`]?.checkbox).length,
-        shadowingRequested: props['Shadowing Requested']?.rich_text?.[0]?.text?.content || '—',
-        shadowingScheduled: props['Shadowing Scheduled']?.checkbox || false,
-      };
-    });
+  if (loading) return <div className="p-4">Loading dashboard...</div>;
 
-    res.status(200).json(data);
-  } catch (error) {
-    console.error('Dashboard error:', error);
-    res.status(500).json({ error: error.message });
-  }
+  return (
+    <div className="p-6 max-w-5xl mx-auto">
+      <h1 className="text-2xl font-bold mb-4">📊 Team Lead Dashboard</h1>
+      <table className="w-full table-auto border text-sm">
+        <thead>
+          <tr className="bg-gray-100">
+            <th className="border p-2">Name</th>
+            <th className="border p-2">Email</th>
+            <th className="border p-2">Creator</th>
+            <th className="border p-2">Modules</th>
+            <th className="border p-2">Requested</th>
+            <th className="border p-2">Scheduled</th>
+          </tr>
+        </thead>
+        <tbody>
+          {chatters.map((c, idx) => (
+            <tr key={idx} className="border-t">
+              <td className="border p-2">{c.name}</td>
+              <td className="border p-2">{c.email}</td>
+              <td className="border p-2">{c.creator}</td>
+              <td className="border p-2">{c.completedModules}/6</td>
+              <td className="border p-2">{c.shadowingRequested}</td>
+              <td className="border p-2">{c.shadowingScheduled ? '✅' : '❌'}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
 }
