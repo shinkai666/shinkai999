@@ -10,7 +10,7 @@ export default async function handler(req, res) {
     });
 
     const data = response.results.map((page) => {
-      const props = page.properties;
+      const props = page.properties || {};
       return {
         name: props['Full name']?.title?.[0]?.text?.content || '—',
         email: props['Email']?.email || '—',
@@ -23,7 +23,7 @@ export default async function handler(req, res) {
 
     res.status(200).json(data);
   } catch (error) {
-    console.error('Dashboard error:', error);
+    console.error('Dashboard error:', error.message);
     res.status(500).json({ error: error.message });
   }
 }
